@@ -103,7 +103,7 @@ def generate_reply(message: str, intent: str, confidence: float, cases: list[dic
     try:
         obj = llm.chat_json([{"role": "system", "content": SYSTEM},
                              {"role": "user", "content": prompt}],
-                            temperature=0.2, max_tokens=500)
+                            temperature=0.2, max_tokens=2500)
     except llm.LLMError as e:
         out = _fallback(message, intent, cases, evidence_quality)
         out["uncertainty"] += f" (LLM call failed: {e})"

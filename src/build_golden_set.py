@@ -139,7 +139,7 @@ def main():
                 obj = llm.chat_json(
                     [{"role": "system", "content": PROPOSAL_SYSTEM},
                      {"role": "user", "content": _proposal_prompt(msg)}],
-                    temperature=0.0, max_tokens=200)
+                    temperature=0.0, max_tokens=2500)
                 pi = str(obj.get("intent", "")).strip()
                 proposals.append(pi if pi in INTENTS else "general_complaint_feedback")
                 notes.append(str(obj.get("note", ""))[:200])
@@ -173,10 +173,21 @@ def main():
     OUT.parent.mkdir(parents=True, exist_ok=True)
     out.to_csv(OUT, index=False, encoding="utf-8")
 
-    agree = (out.proposed_intent == out.weak_rule_label).mean()
+    n_llm = int((out.label_source == "llm_proposed").sum())
     print(f"\nwrote {OUT} ({len(out)} rows)")
-    print(f"proposal source: {'LLM' if use_llm else 'rules (needs review)'}")
-    print(f"proposal vs weak-rule agreement: {agree:.1%}")
+    print(f"proposals: {n_llm} from LLM, {len(out) - n_llm} fell back to rules")
+    if use_llm and n_llm < 0.9 * len(out):
+        print(f"  !! WARNING: only {n_llm/len(out):.0%} of proposals came from the LLM. "
+              "The rest are seeded from the weak-supervision rules, which makes them "
+              "CIRCULAR with the training labels. Raise LLM_MIN_INTERVAL and re-run, "
+              "or review those rows especially carefully.")
+    # Agreement is only meaningful on the LLM-proposed rows: a rule-seeded row
+    # agrees with the rule by construction and would inflate this to ~100%.
+    llm_rows = out[out.label_source == "llm_proposed"]
+    if len(llm_rows):
+        agree = (llm_rows.proposed_intent == llm_rows.weak_rule_label).mean()
+        print(f"independent LLM proposal vs weak-rule agreement: {agree:.1%} "
+              f"(on {len(llm_rows)} rows) — this is an estimate of training-label noise")
     print(out.stratum.value_counts().to_string())
     print(out.difficulty.value_counts().to_string())
     print("\nNEXT: python -m src.review_golden_set   <- required before evaluation")

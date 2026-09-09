@@ -1,5 +1,5 @@
 message,gold,pred,conf,risk,ev_quality,decision,reason,difficulty,top_sim,correct
-spotify is using almost 8gb of my storage what,general_complaint_feedback,general_complaint_feedback,0.8458,LOW,0.3466,ESCALATE,the drafter reported it could not ground the reply,hard,0.2589,True
+spotify is using almost 8gb of my storage what,app_device_bug,general_complaint_feedback,0.8458,LOW,0.3466,ESCALATE,the drafter reported it could not ground the reply,hard,0.2589,False
 "@SpotifyCares I think my account has been hacked, someone keeps playing music using Spotiamb 0.2.1 as a device - what do I do to resolve?",account_login_access,account_login_access,0.8815,HIGH,0.601,ESCALATE,Hard policy block: account_takeover_or_security,easy,0.3484,True
 "@125633 Feature idea: Add your SoundCloud, YouTube etc. links to your Artist Page!",general_complaint_feedback,general_complaint_feedback,0.9608,LOW,0.637,AUTO-HANDLE,"intent confidence 0.96 and evidence quality 0.64 both clear threshold on a low-risk intent, with 3 supporting precedent(s)",hard,0.2143,True
 Is @115888 offline for anyone else?,general_complaint_feedback,general_complaint_feedback,0.6562,LOW,0.6487,AUTO-HANDLE,"intent confidence 0.66 and evidence quality 0.65 both clear threshold on a low-risk intent, with 4 supporting precedent(s)",hard,0.4449,True

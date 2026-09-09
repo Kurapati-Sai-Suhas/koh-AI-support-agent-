@@ -124,7 +124,7 @@ def judge_reply(message: str, reply: str, cases: list[dict], intent: str) -> dic
         C.LLM_MODEL = JUDGE_MODEL           # judge may differ from the drafter
         try:
             obj = llm.chat_json([{"role": "user", "content": prompt}],
-                                temperature=0.0, max_tokens=400)
+                                temperature=0.0, max_tokens=4000)
         finally:
             C.LLM_MODEL = saved
     except llm.LLMError as e:
