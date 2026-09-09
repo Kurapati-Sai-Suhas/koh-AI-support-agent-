@@ -1,0 +1,8 @@
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+models/*.joblib
+__pycache__/
+*.pyc
+.env
+*_log.txt

@@ -1,0 +1,10 @@
+{
+  "best_params": {
+    "clf__C": "10.0",
+    "clf__class_weight": "balanced",
+    "features__word__ngram_range": "(1, 2)"
+  },
+  "cv_best_macro_f1": 0.7183,
+  "n_configs": 12,
+  "search_seconds": 182.3
+}

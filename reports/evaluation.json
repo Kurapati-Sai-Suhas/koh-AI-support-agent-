@@ -1,0 +1,39 @@
+{
+  "test_weak_labels": {
+    "n": 3076,
+    "accuracy": 0.842,
+    "macro_f1": 0.7109,
+    "weighted_f1": 0.8476
+  },
+  "golden_total_rows": 200,
+  "golden_reviewed_rows": 0,
+  "golden_reviewed_pct": 0.0,
+  "golden": {
+    "n": 200,
+    "accuracy": 0.785,
+    "macro_f1": 0.6945,
+    "weighted_f1": 0.797
+  },
+  "golden_labels_are_human_reviewed": false,
+  "weak_rule_vs_gold_agreement": 1.0,
+  "agent": {
+    "coverage_auto_handled": 0.46,
+    "selective_accuracy_on_auto": 0.8587,
+    "accuracy_on_escalated": 0.7778,
+    "accuracy_overall": 0.815,
+    "error_rate_on_auto_handled": 0.1413
+  },
+  "judge": {
+    "backend": "heuristic",
+    "n_judged": 40,
+    "means": {
+      "relevance": 3.77,
+      "correctness": 4.22,
+      "grounding": 5.0,
+      "helpfulness": 3.77,
+      "tone": 4.75,
+      "hallucination_risk": 5.0,
+      "overall": 4.22
+    }
+  }
+}

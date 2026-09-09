@@ -1,0 +1,11 @@
+brand,pairs,boilerplate_pct,median_reply_chars,english_share
+AmazonHelp,168814,0.6,120,0.926
+AppleSupport,106646,38.9,129,0.969
+Uber_Support,56160,31.3,104,0.995
+SpotifyCares,43092,25.7,131,0.983
+Delta,42114,14.0,102,0.985
+Tesco,38468,9.0,134,0.985
+AmericanAir,36531,13.6,107,0.99
+TMobileHelp,34215,60.6,126,0.987
+comcastcares,32921,40.8,124,0.992
+XboxSupport,23235,19.2,110,0.993

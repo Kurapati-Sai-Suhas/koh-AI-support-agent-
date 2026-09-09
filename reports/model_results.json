@@ -1,0 +1,32 @@
+{
+  "baseline_1_majority": {
+    "accuracy": 0.7198,
+    "macro_f1": 0.093,
+    "weighted_f1": 0.6025
+  },
+  "baseline_2_tfidf_lr": {
+    "accuracy": 0.8131,
+    "macro_f1": 0.544,
+    "weighted_f1": 0.7897
+  },
+  "baseline_3_complement_nb": {
+    "accuracy": 0.7861,
+    "macro_f1": 0.5276,
+    "weighted_f1": 0.7671
+  },
+  "tuned_full_model": {
+    "accuracy": 0.842,
+    "macro_f1": 0.7109,
+    "weighted_f1": 0.8476
+  },
+  "tuned_full_model_val": {
+    "accuracy": 0.853,
+    "macro_f1": 0.7357,
+    "weighted_f1": 0.8577
+  },
+  "ablation_word_tfidf_only": {
+    "accuracy": 0.8414,
+    "macro_f1": 0.7208,
+    "weighted_f1": 0.8468
+  }
+}
