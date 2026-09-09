@@ -110,6 +110,8 @@ def main():
     esc = dec[dec.decision == "ESCALATE"]
 
     out["agent"] = {
+        # Coverage is the only label-independent number here: it is just how
+        # often the agent chose to answer. Everything below depends on labels.
         "coverage_auto_handled": round(float(len(auto) / len(dec)), 4),
         "selective_accuracy_on_auto": round(float(auto.correct.mean()), 4) if len(auto) else None,
         "accuracy_on_escalated": round(float(esc.correct.mean()), 4) if len(esc) else None,
@@ -117,7 +119,26 @@ def main():
         # The number that matters for trust: of everything we answered alone,
         # how much was wrong? This is what a customer would experience.
         "error_rate_on_auto_handled": round(float(1 - auto.correct.mean()), 4) if len(auto) else None,
+        "measured_against": "human-reviewed labels" if not used_unreviewed
+                            else "UNREVIEWED proposals — not a quality measure",
     }
+
+    # When the golden set is not yet human-reviewed, report the SAME agent
+    # metrics under both independent label sources. They disagree wildly, and
+    # publishing one of them alone would be the exact error this project warns
+    # about. The spread is the honest statement of what we do not yet know.
+    if used_unreviewed and "weak_rule_label" in gold_eval.columns:
+        alt = gold_eval.weak_rule_label.astype(str).to_numpy()
+        alt_correct = dec.pred.to_numpy() == alt
+        am = dec.decision.to_numpy() == "AUTO-HANDLE"
+        out["agent_under_alternative_labels"] = {
+            "label_source": "weak-supervision rules (what the model trained on)",
+            "selective_accuracy_on_auto": round(float(alt_correct[am].mean()), 4) if am.any() else None,
+            "accuracy_overall": round(float(alt_correct.mean()), 4),
+            "note": ("The primary figures above use the independent proposals; these use "
+                     "the training rules. Neither is ground truth. The true value lies "
+                     "somewhere between and requires the human review."),
+        }
     dec.to_csv(C.REPORTS / "agent_decisions_golden.csv", index=False)
 
     # ================= LEVEL 3: response quality ==========================
@@ -126,7 +147,11 @@ def main():
     judged = []
     for i in idx:
         s = states[int(i)]
-        j = judge_reply(s["customer_message"], s["reply"], s["historical_evidence"], s["intent"])
+        # Pass the drafter's backend so the judge can record whether it graded
+        # its own output (Panickssery et al., 2024). Without this the
+        # self_graded flag silently reports False even for same-model runs.
+        j = judge_reply(s["customer_message"], s["reply"], s["historical_evidence"],
+                        s["intent"], drafted_by=s.get("backend"))
         judged.append({"message": s["customer_message"], "reply": s["reply"],
                        "decision": s["decision"], "intent": s["intent"],
                        "evidence_quality": s["evidence_quality"],
@@ -176,10 +201,27 @@ def main():
     if used_unreviewed:
         A("> **The golden row above is not yet a real measurement.** "
           f"Only {out['golden_reviewed_rows']}/{out['golden_total_rows']} rows have been "
-          "human-reviewed, so the labels are still the weak-supervision rules the model "
-          "was trained on, and the score is circular by construction. "
+          "human-reviewed. The labels are independent *proposals*, and they agree with the "
+          f"weak-supervision rules the model trained on only "
+          f"**{out['weak_rule_vs_gold_agreement']:.0%}** of the time. Two independent "
+          "sources disagreeing this much means neither can be treated as ground truth: "
+          "measured against the proposals the agent looks terrible, against the rules it "
+          "looks strong, and the truth is somewhere between. "
           "Run `python -m src.review_golden_set` and re-run this script. "
-          "Until then, treat this table as the *test* row only.")
+          "Until then, treat the *test* row as the only defensible model number, and see "
+          "the dual-label agent table below.")
+        if "agent_under_alternative_labels" in out:
+            a2 = out["agent_under_alternative_labels"]
+            A("")
+            A("| agent metric | vs independent proposals | vs training rules |")
+            A("|---|---|---|")
+            sa1 = out["agent"]["selective_accuracy_on_auto"]
+            sa2 = a2["selective_accuracy_on_auto"]
+            A(f"| selective accuracy on auto-handled | {sa1:.1%} | {sa2:.1%} |")
+            A(f"| accuracy overall | {out['agent']['accuracy_overall']:.1%} | "
+              f"{a2['accuracy_overall']:.1%} |")
+            A("")
+            A("Coverage is unaffected by labels and is a real measurement.")
     else:
         A(f"Weak rules agree with the human labels on "
           f"**{out['weak_rule_vs_gold_agreement']:.1%}** of golden rows — that gap is the "

@@ -10,47 +10,54 @@ and still be untrustworthy, which is the point of the other two.
 | evaluation set | labels | n | accuracy | macro F1 | weighted F1 |
 |---|---|---|---|---|---|
 | held-out test | weak-supervision rules | 3076 | 0.842 | 0.711 | 0.848 |
-| golden set | UNREVIEWED (rule-seeded) | 200 | 0.780 | 0.691 | 0.791 |
+| golden set | UNREVIEWED (rule-seeded) | 200 | 0.310 | 0.386 | 0.339 |
 
-> **The golden row above is not yet a real measurement.** Only 0/200 rows have been human-reviewed, so the labels are still the weak-supervision rules the model was trained on, and the score is circular by construction. Run `python -m src.review_golden_set` and re-run this script. Until then, treat this table as the *test* row only.
+> **The golden row above is not yet a real measurement.** Only 0/200 rows have been human-reviewed. The labels are independent *proposals*, and they agree with the weak-supervision rules the model trained on only **27%** of the time. Two independent sources disagreeing this much means neither can be treated as ground truth: measured against the proposals the agent looks terrible, against the rules it looks strong, and the truth is somewhere between. Run `python -m src.review_golden_set` and re-run this script. Until then, treat the *test* row as the only defensible model number, and see the dual-label agent table below.
+
+| agent metric | vs independent proposals | vs training rules |
+|---|---|---|
+| selective accuracy on auto-handled | 6.5% | 83.1% |
+| accuracy overall | 25.0% | 81.5% |
+
+Coverage is unaffected by labels and is a real measurement.
 
 ### Per-class performance (golden set)
 
 | intent | precision | recall | F1 | support |
 |---|---|---|---|---|
-| `account_login_access` | 0.75 | 0.75 | 0.75 | 12 |
-| `app_device_bug` | 0.43 | 0.67 | 0.52 | 9 |
-| `billing_payment` | 0.40 | 0.67 | 0.50 | 6 |
-| `cancellation_request` | 1.00 | 0.86 | 0.92 | 7 |
-| `content_availability` | 0.42 | 0.83 | 0.56 | 6 |
-| `feature_how_to` | 0.86 | 0.75 | 0.80 | 8 |
-| `general_complaint_feedback` | 0.90 | 0.82 | 0.86 | 133 |
-| `playback_streaming_issue` | 0.83 | 0.83 | 0.83 | 6 |
-| `subscription_plan` | 0.50 | 0.46 | 0.48 | 13 |
+| `account_login_access` | 1.00 | 0.55 | 0.71 | 22 |
+| `app_device_bug` | 0.43 | 0.38 | 0.40 | 16 |
+| `billing_payment` | 0.80 | 0.50 | 0.62 | 16 |
+| `cancellation_request` | 0.67 | 0.44 | 0.53 | 9 |
+| `content_availability` | 0.58 | 0.21 | 0.30 | 34 |
+| `feature_how_to` | 0.43 | 0.07 | 0.12 | 41 |
+| `general_complaint_feedback` | 0.10 | 0.92 | 0.18 | 13 |
+| `playback_streaming_issue` | 0.33 | 0.07 | 0.11 | 29 |
+| `subscription_plan` | 0.67 | 0.40 | 0.50 | 20 |
 
 ### Confusion matrix (golden set)
 
 | true \ pred | account_login_ | app_device_bug | billing_paymen | cancellation_r | content_availa | feature_how_to | general_compla | playback_strea | subscription_p |
 |---|---|---|---|---|---|---|---|---|---|
-| **account_login_access** | 9 | 1 | 0 | 0 | 0 | 0 | 1 | 1 | 0 |
-| **app_device_bug** | 0 | 6 | 0 | 0 | 0 | 0 | 3 | 0 | 0 |
-| **billing_payment** | 0 | 0 | 4 | 0 | 0 | 0 | 2 | 0 | 0 |
-| **cancellation_request** | 0 | 0 | 0 | 6 | 0 | 0 | 0 | 0 | 1 |
-| **content_availability** | 0 | 0 | 0 | 0 | 5 | 0 | 0 | 0 | 1 |
-| **feature_how_to** | 0 | 0 | 0 | 0 | 0 | 6 | 1 | 0 | 1 |
-| **general_complaint_feed** | 3 | 6 | 5 | 0 | 7 | 0 | 109 | 0 | 3 |
-| **playback_streaming_iss** | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 5 | 0 |
-| **subscription_plan** | 0 | 1 | 1 | 0 | 0 | 1 | 4 | 0 | 6 |
+| **account_login_access** | 12 | 2 | 0 | 0 | 1 | 0 | 5 | 1 | 1 |
+| **app_device_bug** | 0 | 6 | 0 | 0 | 0 | 0 | 10 | 0 | 0 |
+| **billing_payment** | 0 | 1 | 8 | 0 | 1 | 0 | 6 | 0 | 0 |
+| **cancellation_request** | 0 | 1 | 1 | 4 | 0 | 0 | 2 | 0 | 1 |
+| **content_availability** | 0 | 0 | 0 | 0 | 7 | 3 | 22 | 1 | 1 |
+| **feature_how_to** | 0 | 2 | 1 | 0 | 3 | 3 | 30 | 2 | 0 |
+| **general_complaint_feed** | 0 | 0 | 0 | 0 | 0 | 1 | 12 | 0 | 0 |
+| **playback_streaming_iss** | 0 | 2 | 0 | 0 | 0 | 0 | 24 | 2 | 1 |
+| **subscription_plan** | 0 | 0 | 0 | 2 | 0 | 0 | 10 | 0 | 8 |
 
 ## Level 2 — agent quality (was the decision right?)
 
 | metric | value |
 |---|---|
 | coverage (share auto-handled) | 38.5% |
-| selective accuracy on auto-handled | 83.1% |
-| error rate on auto-handled | 16.9% |
-| accuracy on escalated slice | 79.7% |
-| accuracy over everything | 81.0% |
+| selective accuracy on auto-handled | 6.5% |
+| error rate on auto-handled | 93.5% |
+| accuracy on escalated slice | 36.6% |
+| accuracy over everything | 25.0% |
 
 The agent is *supposed* to be less accurate on the escalated slice — that is what
 abstention buys. If the two slices had equal accuracy the gate would be sorting noise.
@@ -65,61 +72,49 @@ abstention buys. If the two slices had equal accuracy the gate would be sorting 
 
 ## Level 3 — response quality (LLM-as-judge)
 
-Backend: `heuristic` · 40 replies judged
-
-> **This is not an LLM judgment.** No LLM key was configured, so the rubric was
-> scored by the deterministic fallback in `src/judge.py`, which computes the same
-> six dimensions from lexical grounding, policy-violation regexes and reply shape.
-> It is a sanity check, not a quality measure. Set `LLM_API_KEY` in `.env` and
-> re-run to get real judge scores.
+Backend: `ollama:llama3:latest` · 40 replies judged
 
 | dimension | mean (1-5) |
 |---|---|
-| relevance | 3.77 |
-| correctness | 4.22 |
-| grounding | 5.00 |
-| helpfulness | 3.77 |
-| tone | 4.75 |
-| hallucination_risk | 5.00 |
-| overall | 4.22 |
+| relevance | 3.85 |
+| correctness | 4.83 |
+| grounding | 4.47 |
+| helpfulness | 3.27 |
+| tone | 4.83 |
+| hallucination_risk | 4.60 |
+| overall | 4.15 |
 
 ## Failure analysis — top buckets (real rows, no invented examples)
 
-38 of 200 golden messages were classified wrongly.
+150 of 200 golden messages were classified wrongly.
 
 | failure mode | n |
 |---|---|
-| missed a specific intent | 25 |
-| over-triggered on vague message | 6 |
-| specific-intent confusion | 4 |
-| low-confidence confusion | 3 |
+| missed a specific intent | 139 |
+| specific-intent confusion | 9 |
+| low-confidence confusion | 2 |
 
 ### Worked examples
 
 **missed a specific intent**
 
-- message: `@SpotifyCares Ok, 2018 Skoda Kodiaq, Columbus Big Navi, CarPlay`
-- expected: `app_device_bug` · predicted: `general_complaint_feedback` (confidence 0.94)
-- top retrieved similarity: 0.49 · evidence quality: 0.74
+- message: `@SpotifyCares 
+
+Picture and artists don't match up with title https://t.co/dPTPhxvO5H`
+- expected: `content_availability` · predicted: `general_complaint_feedback` (confidence 0.98)
+- top retrieved similarity: 0.37 · evidence quality: 0.65
 - agent decision: **AUTO-HANDLE**
-
-**over-triggered on vague message**
-
-- message: `@SpotifyCares I deleted my Facebook account and I can no longer login. When I go to submit a help form, it says to login, but I cannot because I refuse to reactivate my Facebook. I tried resetting my `
-- expected: `general_complaint_feedback` · predicted: `account_login_access` (confidence 0.96)
-- top retrieved similarity: 0.29 · evidence quality: 0.54
-- agent decision: **ESCALATE**
 
 **specific-intent confusion**
 
-- message: `@SpotifyCares Hi, on the app it says I have PREMIUM TRIAL but on the website it’s says it’ll be renewed next month, but I know for sure that I got the premium trial a couple of weeks back. I want to c`
-- expected: `cancellation_request` · predicted: `subscription_plan` (confidence 0.92)
-- top retrieved similarity: 0.21 · evidence quality: 0.21
+- message: `@SpotifyCares i cant sign up for student discount after i canceled my premium account.`
+- expected: `account_login_access` · predicted: `subscription_plan` (confidence 0.92)
+- top retrieved similarity: 0.33 · evidence quality: 0.46
 - agent decision: **ESCALATE**
 
 **low-confidence confusion**
 
-- message: `@SpotifyCares premium acc. Searching for album. Want to listen in full. Green button is shuffle play. How do I play all tracks &amp; clear que?`
-- expected: `subscription_plan` · predicted: `feature_how_to` (confidence 0.44)
-- top retrieved similarity: 0.23 · evidence quality: 0.28
+- message: `@SpotifyCares offline mode slider won't show on macbook desktop, how to fix? I have premium with 1 other device connected. have reinstalled`
+- expected: `feature_how_to` · predicted: `playback_streaming_issue` (confidence 0.39)
+- top retrieved similarity: 0.17 · evidence quality: 0.25
 - agent decision: **ESCALATE**

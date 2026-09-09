@@ -10,30 +10,37 @@
   "golden_reviewed_pct": 0.0,
   "golden": {
     "n": 200,
-    "accuracy": 0.78,
-    "macro_f1": 0.6913,
-    "weighted_f1": 0.7914
+    "accuracy": 0.31,
+    "macro_f1": 0.3864,
+    "weighted_f1": 0.3385
   },
   "golden_labels_are_human_reviewed": false,
-  "weak_rule_vs_gold_agreement": 0.995,
+  "weak_rule_vs_gold_agreement": 0.27,
   "agent": {
     "coverage_auto_handled": 0.385,
+    "selective_accuracy_on_auto": 0.0649,
+    "accuracy_on_escalated": 0.3659,
+    "accuracy_overall": 0.25,
+    "error_rate_on_auto_handled": 0.9351,
+    "measured_against": "UNREVIEWED proposals \u2014 not a quality measure"
+  },
+  "agent_under_alternative_labels": {
+    "label_source": "weak-supervision rules (what the model trained on)",
     "selective_accuracy_on_auto": 0.8312,
-    "accuracy_on_escalated": 0.7967,
-    "accuracy_overall": 0.81,
-    "error_rate_on_auto_handled": 0.1688
+    "accuracy_overall": 0.815,
+    "note": "The primary figures above use the independent proposals; these use the training rules. Neither is ground truth. The true value lies somewhere between and requires the human review."
   },
   "judge": {
-    "backend": "heuristic",
+    "backend": "ollama:llama3:latest",
     "n_judged": 40,
     "means": {
-      "relevance": 3.77,
-      "correctness": 4.22,
-      "grounding": 5.0,
-      "helpfulness": 3.77,
-      "tone": 4.75,
-      "hallucination_risk": 5.0,
-      "overall": 4.22
+      "relevance": 3.85,
+      "correctness": 4.83,
+      "grounding": 4.47,
+      "helpfulness": 3.27,
+      "tone": 4.83,
+      "hallucination_risk": 4.6,
+      "overall": 4.15
     }
   }
 }

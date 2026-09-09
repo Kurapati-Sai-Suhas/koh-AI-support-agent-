@@ -133,10 +133,10 @@ def main():
     use_llm = llm.available()
     proposals, notes, sources = [], [], []
     if use_llm:
-        print(f"proposing labels with {C.LLM_MODEL} for {len(rows)} rows ...")
+        print(f"proposing labels with {llm.backend_name()} for {len(rows)} rows ...")
         for n, msg in enumerate(rows.customer_text.astype(str), 1):
             try:
-                obj = llm.chat_json(
+                obj, _served = llm.chat_json_with_provider(
                     [{"role": "system", "content": PROPOSAL_SYSTEM},
                      {"role": "user", "content": _proposal_prompt(msg)}],
                     temperature=0.0, max_tokens=2500)

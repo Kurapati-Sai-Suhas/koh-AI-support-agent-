@@ -9,10 +9,11 @@ are handled explicitly rather than ignored:
   position bias      not applicable — we grade one reply at a time, no pairwise ordering
   verbosity bias     the rubric scores grounding against evidence, and replies are
                      length-capped at 280 chars, so padding cannot buy a higher score
-  self-enhancement   REAL AND UNMITIGATED when one key drafts and judges. Set
-                     JUDGE_MODEL to a different model than LLM_MODEL to avoid it.
-                     The output records both model ids so the report can say which
-                     configuration produced the numbers.
+  self-enhancement   REAL. Set JUDGE_PROVIDER_ORDER to a different provider chain
+                     than LLM_PROVIDER_ORDER (e.g. draft on ollama, judge on
+                     gemini) so the grader is a different model family. Every
+                     judgment records `judge_backend` and `self_graded`, so a
+                     same-model run is visible in the data rather than hidden.
 
 The fallback judge is NOT an LLM and never pretends to be. It scores the same six
 dimensions from computable quantities (evidence overlap, policy-violation regexes,
@@ -28,10 +29,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import config as C
 import llm
+from providers import ProviderManager, LLMError
 from critic import lexical_grounding
 from risk_engine import check_forbidden
 
-JUDGE_MODEL = os.getenv("JUDGE_MODEL", C.LLM_MODEL)
 
 DIMENSIONS = ["relevance", "correctness", "grounding", "helpfulness", "tone",
               "hallucination_risk"]
@@ -114,26 +115,44 @@ def heuristic_judge(message: str, reply: str, cases: list[dict], intent: str) ->
             "judge_backend": "heuristic"}
 
 
-def judge_reply(message: str, reply: str, cases: list[dict], intent: str) -> dict:
-    if not llm.available():
+def _judge_manager():
+    """The judge may run on a different provider chain than the drafter.
+
+    Set JUDGE_PROVIDER_ORDER (e.g. "gemini,ollama") to grade with a different
+    model family than the one that wrote the reply. Panickssery et al. (NeurIPS
+    2024) show evaluators favour their own generations, so same-model grading
+    inflates scores. When the two chains resolve to the same label we do not
+    hide it — `self_graded` is recorded on every judgment.
+    """
+    global _JUDGE_MGR
+    if _JUDGE_MGR is None:
+        order = os.getenv("JUDGE_PROVIDER_ORDER", "")
+        _JUDGE_MGR = (ProviderManager(order=[p.strip() for p in order.split(",") if p.strip()])
+                      if order else llm.get_manager())
+    return _JUDGE_MGR
+
+
+_JUDGE_MGR = None
+
+
+def judge_reply(message: str, reply: str, cases: list[dict], intent: str,
+                drafted_by: str | None = None) -> dict:
+    """CRITICAL evaluation call, with an explicit, labelled deterministic fallback."""
+    mgr = _judge_manager()
+    if not mgr.available():
         return heuristic_judge(message, reply, cases, intent)
     prompt = RUBRIC.format(brand=C.BRAND, message=message, intent=intent,
                            cases=_fmt(cases), reply=reply)
     try:
-        saved = C.LLM_MODEL
-        C.LLM_MODEL = JUDGE_MODEL           # judge may differ from the drafter
-        try:
-            obj = llm.chat_json([{"role": "user", "content": prompt}],
-                                temperature=0.0, max_tokens=4000)
-        finally:
-            C.LLM_MODEL = saved
-    except llm.LLMError as e:
+        obj, served_by = mgr.chat_json([{"role": "user", "content": prompt}],
+                                       temperature=0.0, max_tokens=4000)
+    except LLMError as e:
         out = heuristic_judge(message, reply, cases, intent)
-        out["reason"] += f" | LLM judge failed: {e}"
+        out["reason"] += f" | all judge providers failed: {e}"
         return out
     out = {d: _clip(obj.get(d, 3)) for d in DIMENSIONS}
     out["overall"] = _clip(obj.get("overall", sum(out.values()) / len(out)))
     out["reason"] = str(obj.get("reason", ""))[:400]
-    out["judge_backend"] = f"llm:{JUDGE_MODEL}"
-    out["self_graded"] = (JUDGE_MODEL == C.LLM_MODEL)
+    out["judge_backend"] = served_by
+    out["self_graded"] = bool(drafted_by and drafted_by == served_by)
     return out

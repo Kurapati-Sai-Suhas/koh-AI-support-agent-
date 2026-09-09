@@ -69,7 +69,12 @@ def _clean_draft(reply: str) -> str:
     r = re.sub(r"^\s*(?:@[\w<>]+\s+)+", "", r)          # leading handles
     r = re.sub(r"@" + re.escape(C.BRAND) + r"\b", "", r, flags=re.I)  # brand self-mention
     r = re.sub(r"@?<user>|@user\b", "", r, flags=re.I)  # placeholder leakage
-    return re.sub(r"\s{2,}", " ", r).strip()
+    r = re.sub(r"\s{2,}", " ", r).strip()
+    # A stray leading "@" survives when the model glues the handle to the first
+    # word ("@Hey!") or when a substitution above removes the handle but not the
+    # sigil. Seen live from llama3.
+    r = re.sub(r"^@(?=[A-Za-z])", "", r).strip()
+    return r
 
 
 def _format_cases(cases: list[dict]) -> str:
@@ -119,13 +124,18 @@ def generate_reply(message: str, intent: str, confidence: float, cases: list[dic
         eq=evidence_quality, cases=_format_cases(cases),
         policy="\n".join(f"- {p}" for p in POLICY_CONSTRAINTS),
     )
+    # CRITICAL call: the customer-facing draft. If every provider fails we do not
+    # raise — we degrade to the extractive backend and say so, because a support
+    # queue with no draft is worse than a draft in the brand's own prior words.
     try:
-        obj = llm.chat_json([{"role": "system", "content": SYSTEM},
-                             {"role": "user", "content": prompt}],
-                            temperature=0.2, max_tokens=2500)
+        obj, served_by = llm.chat_json_with_provider(
+            [{"role": "system", "content": SYSTEM},
+             {"role": "user", "content": prompt}],
+            temperature=0.2, max_tokens=2500)
     except llm.LLMError as e:
         out = _fallback(message, intent, cases, evidence_quality)
-        out["uncertainty"] += f" (LLM call failed: {e})"
+        out["uncertainty"] += f" (all LLM providers failed: {e})"
+        out["provider_failed"] = True
         return out
     return {
         "reply": _clean_draft(str(obj.get("reply", "")))[:600],
@@ -133,5 +143,6 @@ def generate_reply(message: str, intent: str, confidence: float, cases: list[dic
         "evidence_used": list(obj.get("evidence_used", []) or []),
         "uncertainty": str(obj.get("uncertainty", "")),
         "should_escalate": bool(obj.get("should_escalate", False)),
-        "backend": llm.backend_name(),
+        "backend": served_by,
+        "provider_failed": False,
     }

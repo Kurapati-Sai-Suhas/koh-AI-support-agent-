@@ -65,14 +65,24 @@ def main():
     show_menu()
     done = 0
     for pos, (i, row) in enumerate(todo.iterrows(), 1):
+        # The two label sources are independent and disagree often (measured at
+        # ~27% overall agreement, and only 9% on rows the rules call catch-all,
+        # because the proposing LLM under-uses that class). Where they disagree
+        # there is no safe default, so ENTER is disabled and the reviewer must
+        # choose — otherwise holding ENTER would silently import that bias.
+        disagree = str(row.proposed_intent) != str(row.weak_rule_label)
         print("=" * 76)
         print(f"[{pos}/{len(todo)}]  difficulty={row.difficulty}  stratum={row.stratum}")
         print(f"\n  {row.message}\n")
-        print(f"  proposed : {row.proposed_intent}")
-        print(f"  weak rule: {row.weak_rule_label}    model: {row.model_pred} "
-              f"({row.model_confidence:.2f})")
+        if disagree:
+            print("  !! the two label sources DISAGREE — pick one deliberately")
+        print(f"  LLM proposal : {row.proposed_intent}")
+        print(f"  weak rule    : {row.weak_rule_label}")
+        print(f"  model says   : {row.model_pred} ({row.model_confidence:.2f})")
+        prompt = ("  1-9 / r=rule / l=LLM / s / q > " if disagree
+                  else "  accept [ENTER] / 1-9 / s / q > ")
         try:
-            ans = input("  accept [ENTER] / 1-9 / s / q > ").strip().lower()
+            ans = input(prompt).strip().lower()
         except (EOFError, KeyboardInterrupt):
             print("\ninterrupted — saving.")
             break
@@ -80,12 +90,17 @@ def main():
             break
         if ans == "s":
             continue
-        if ans == "":
+        if ans == "" and not disagree:
             df.at[i, "gold_intent"] = row.proposed_intent
+        elif ans == "l":
+            df.at[i, "gold_intent"] = row.proposed_intent
+        elif ans == "r":
+            df.at[i, "gold_intent"] = row.weak_rule_label
         elif ans.isdigit() and 1 <= int(ans) <= len(INTENTS):
             df.at[i, "gold_intent"] = INTENTS[int(ans) - 1]
         else:
-            print("  ? not understood, skipping")
+            print("  ? sources disagree — press r, l or a number" if disagree
+                  else "  ? not understood, skipping")
             continue
         df.at[i, "reviewed"] = True
         df.at[i, "label_source"] = "human_reviewed"

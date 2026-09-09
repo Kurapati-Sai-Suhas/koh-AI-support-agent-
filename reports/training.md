@@ -23,7 +23,7 @@ Brand `SpotifyCares` · 13,891 train / 3,033 val / 3,076 test rows
 }
 ```
 
-Searched 12 configurations with 3-fold GroupKFold cross-validation on the training split only (182s). Best CV macro-F1 0.718.
+Searched 12 configurations with 3-fold GroupKFold cross-validation on the training split only (109s). Best CV macro-F1 0.718.
 
 The test numbers above are measured against *weak-supervision* labels and are
 optimistic by construction. The honest headline is the golden-set score in
