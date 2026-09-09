@@ -1,0 +1,59 @@
+{
+  "note": "Real messages from the held-out test split of the Customer Support on Twitter dataset. Not fabricated. Expected behaviour is whatever the live agent produces - these labels describe why each case was chosen, not a hard-coded result.",
+  "cases": [
+    {
+      "id": 1,
+      "label": "Easy auto-handle",
+      "why_included": "Common content-availability question with strong precedent.",
+      "message": "@SpotifyCares when will reputation be available to stream??",
+      "dataset_row": 2312,
+      "conversation_id": 2251325,
+      "weak_rule_label": "content_availability"
+    },
+    {
+      "id": 2,
+      "label": "Auto-handle",
+      "why_included": "How-to question, low risk, well covered by history.",
+      "message": "@SpotifyCares hey how do I️ get verified?? Thanks!",
+      "dataset_row": 2262,
+      "conversation_id": 2210940,
+      "weak_rule_label": "feature_how_to"
+    },
+    {
+      "id": 3,
+      "label": "Clear escalation (hard block)",
+      "why_included": "Account-compromise language triggers a deterministic policy block.",
+      "message": "id::93__credit_card__:@SpotifyCares My account was hacked/compromised. I’ve regained access and changed my password but I noticed there w",
+      "dataset_row": 395,
+      "conversation_id": 460199,
+      "weak_rule_label": "account_login_access"
+    },
+    {
+      "id": 4,
+      "label": "Escalation (high-risk intent)",
+      "why_included": "Refund request - billing is high-risk and needs human sign-off.",
+      "message": "@SpotifyCares hey I was charged today is there anyway that I can get a refund because the money that you cause took has made it so that I can't make the payment on my car and I really need that money back",
+      "dataset_row": 534,
+      "conversation_id": 591493,
+      "weak_rule_label": "billing_payment"
+    },
+    {
+      "id": 5,
+      "label": "Ambiguous",
+      "why_included": "Student-discount question sits between subscription_plan and feature_how_to.",
+      "message": "@115888  if i pay 10$ /m and im a student how do i get the discount ?",
+      "dataset_row": 742,
+      "conversation_id": 189825,
+      "weak_rule_label": "subscription_plan"
+    },
+    {
+      "id": 6,
+      "label": "Noisy / context-free follow-up",
+      "why_included": "Device specs only - intent lives in the previous turn. Known failure mode.",
+      "message": "@SpotifyCares Phone: Samsung Galaxy 6, OS: Android 7.0, Spotify Version: 8.4.28.875.",
+      "dataset_row": 1511,
+      "conversation_id": 1698015,
+      "weak_rule_label": "app_device_bug"
+    }
+  ]
+}

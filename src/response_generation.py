@@ -10,6 +10,7 @@ Both backends return the same structured object, so everything downstream
     {reply, grounded, evidence_used[], uncertainty, should_escalate, backend}
 """
 from __future__ import annotations
+import re
 import sys
 from pathlib import Path
 
@@ -53,6 +54,24 @@ Return ONLY a JSON object:
   "uncertainty": "...", "should_escalate": false}}"""
 
 
+def _clean_draft(reply: str) -> str:
+    """Strip handles the model copied out of the precedents.
+
+    Found by human review of live output: drafts came back starting with
+    "@user ...", "@328829 ..." or even "@SpotifyCares ..." — the model imitates
+    the precedent replies, which all begin with the customer handle, and our
+    own preprocessing placeholder leaks in too. A public draft addressed to
+    "@user", or to the brand's own account, is unusable as-is.
+
+    The reply is posted in-thread, so no leading handle is needed at all.
+    """
+    r = (reply or "").strip()
+    r = re.sub(r"^\s*(?:@[\w<>]+\s+)+", "", r)          # leading handles
+    r = re.sub(r"@" + re.escape(C.BRAND) + r"\b", "", r, flags=re.I)  # brand self-mention
+    r = re.sub(r"@?<user>|@user\b", "", r, flags=re.I)  # placeholder leakage
+    return re.sub(r"\s{2,}", " ", r).strip()
+
+
 def _format_cases(cases: list[dict]) -> str:
     if not cases:
         return "(none retrieved)"
@@ -80,7 +99,7 @@ def _fallback(message: str, intent: str, cases: list[dict], evidence_quality: fl
                 "should_escalate": True, "backend": "template"}
     best = usable[0]
     return {
-        "reply": best["historical_reply"],
+        "reply": _clean_draft(best["historical_reply"]),
         "grounded": True,
         "evidence_used": [best["rank"]],
         "uncertainty": ("Extractive fallback: this is the brand's own reply to the closest "
@@ -109,7 +128,7 @@ def generate_reply(message: str, intent: str, confidence: float, cases: list[dic
         out["uncertainty"] += f" (LLM call failed: {e})"
         return out
     return {
-        "reply": str(obj.get("reply", ""))[:600],
+        "reply": _clean_draft(str(obj.get("reply", "")))[:600],
         "grounded": bool(obj.get("grounded", False)),
         "evidence_used": list(obj.get("evidence_used", []) or []),
         "uncertainty": str(obj.get("uncertainty", "")),

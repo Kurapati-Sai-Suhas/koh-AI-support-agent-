@@ -7,3 +7,10 @@ __pycache__/
 .env
 *_log.txt
 *_run.txt
+
+# Private interview-preparation material — never commit
+INTERVIEW_GUIDE.md
+*interview*guide*
+*INTERVIEW*GUIDE*
+interview_notes*
+e2e_results.json

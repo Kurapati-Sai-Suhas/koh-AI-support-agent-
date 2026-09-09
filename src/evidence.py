@@ -48,7 +48,31 @@ def _reply_consistency(replies: list[str]) -> float:
         return 0.5
 
 
-def validate_evidence(cases: list[dict], predicted_intent: str) -> dict:
+def _is_low_information(message: str, predicted_intent: str) -> bool:
+    """Context-free conversational follow-up with no standalone intent.
+
+    Found by human review of live agent output: "No it did not" was auto-handled
+    at 0.91 confidence with 0.94 evidence quality, because TF-IDF cosine over a
+    3-token message matches other short generic messages at similarity 1.0. The
+    similarity is real; the *meaning* is not. On the test split this pattern is
+    10% of everything the agent auto-handled.
+
+    The rule is deliberately conjunctive. Length alone would wrongly escalate
+    legitimate short questions ("hey how do I get verified??" has 4 content
+    words), so we require BOTH few content words AND that the classifier could
+    only reach the catch-all intent — which is precisely the signature of a
+    message whose real intent lives in the previous turn.
+
+    Proper fix is thread context at inference time; this is the honest MVP proxy
+    and it is listed as such in the report.
+    """
+    from critic import _content_words   # local import: avoids a circular import
+    return (len(_content_words(message or "")) < 4
+            and predicted_intent == "general_complaint_feedback")
+
+
+def validate_evidence(cases: list[dict], predicted_intent: str,
+                      message: str | None = None) -> dict:
     """-> {evidence_quality, signals{...}, flags[...]}"""
     if not cases:
         return {"evidence_quality": 0.0,
@@ -84,6 +108,8 @@ def validate_evidence(cases: list[dict], predicted_intent: str) -> dict:
         flags.append("precedent_is_boilerplate_only")
     if consistency < 0.10 and len(cases) > 1:
         flags.append("conflicting_precedent")
+    if message is not None and _is_low_information(message, predicted_intent):
+        flags.append("low_information_message")
 
     return {"evidence_quality": round(float(np.clip(score, 0, 1)), 4),
             "signals": signals, "flags": flags}

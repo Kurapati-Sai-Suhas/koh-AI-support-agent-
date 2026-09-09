@@ -127,6 +127,40 @@ def test_critic_escalates_on_invented_link():
     assert "invented_link" in v["issues"]
 
 
+# ---- fixes driven by the human review (reports/human_review.csv) -----------
+def test_low_information_followup_is_flagged():
+    """"No it did not" was auto-handled at 0.91 confidence before this guard."""
+    cases = [_case(1.0, "Thanks for confirming!", intent="general_complaint_feedback")]
+    ev = validate_evidence(cases, "general_complaint_feedback", "@SpotifyCares No it did not")
+    assert "low_information_message" in ev["flags"]
+
+
+def test_short_but_specific_question_is_not_flagged():
+    """The guard must not escalate legitimate short questions."""
+    cases = [_case(0.7, "Check the steps here", intent="feature_how_to")]
+    ev = validate_evidence(cases, "feature_how_to",
+                           "@SpotifyCares hey how do I get verified?? Thanks!")
+    assert "low_information_message" not in ev["flags"]
+
+
+def test_evidence_validation_is_backwards_compatible():
+    """message is optional: omitting it must not raise or add the flag."""
+    ev = validate_evidence([_case(0.5, "some reply")], "billing_payment")
+    assert "low_information_message" not in ev["flags"]
+
+
+@pytest.mark.parametrize("draft,banned", [
+    ("@user Hey there, can you DM us?", "@user"),
+    ("@328829 Thanks for confirming.", "@328829"),
+    ("@SpotifyCares Hey! Check the steps.", "@SpotifyCares"),
+])
+def test_draft_strips_leaked_handles(draft, banned):
+    from response_generation import _clean_draft
+    out = _clean_draft(draft)
+    assert banned.lower() not in out.lower()
+    assert out and not out.startswith("@")
+
+
 def test_lexical_grounding_bounds():
     cases = [_case(0.9, "send us your account email and we will check the charge")]
     assert lexical_grounding("", cases) == 0.0

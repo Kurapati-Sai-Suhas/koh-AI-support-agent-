@@ -10,18 +10,18 @@
   "golden_reviewed_pct": 0.0,
   "golden": {
     "n": 200,
-    "accuracy": 0.785,
-    "macro_f1": 0.6945,
-    "weighted_f1": 0.797
+    "accuracy": 0.78,
+    "macro_f1": 0.6913,
+    "weighted_f1": 0.7914
   },
   "golden_labels_are_human_reviewed": false,
-  "weak_rule_vs_gold_agreement": 1.0,
+  "weak_rule_vs_gold_agreement": 0.995,
   "agent": {
-    "coverage_auto_handled": 0.46,
-    "selective_accuracy_on_auto": 0.8587,
-    "accuracy_on_escalated": 0.7778,
-    "accuracy_overall": 0.815,
-    "error_rate_on_auto_handled": 0.1413
+    "coverage_auto_handled": 0.385,
+    "selective_accuracy_on_auto": 0.8312,
+    "accuracy_on_escalated": 0.7967,
+    "accuracy_overall": 0.81,
+    "error_rate_on_auto_handled": 0.1688
   },
   "judge": {
     "backend": "heuristic",

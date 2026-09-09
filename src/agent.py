@@ -152,7 +152,7 @@ class SupportAgent:
                             "out": {"n": len(cases),
                                     "top_similarity": cases[0]["similarity"] if cases else 0.0}})
 
-        ev = validate_evidence(cases, st["intent"])
+        ev = validate_evidence(cases, st["intent"], message)
         st["evidence_quality"] = ev["evidence_quality"]
         st["evidence_signals"] = ev["signals"]
         st["evidence_flags"] = ev["flags"]

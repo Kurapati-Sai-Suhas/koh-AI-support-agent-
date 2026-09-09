@@ -10,7 +10,7 @@ and still be untrustworthy, which is the point of the other two.
 | evaluation set | labels | n | accuracy | macro F1 | weighted F1 |
 |---|---|---|---|---|---|
 | held-out test | weak-supervision rules | 3076 | 0.842 | 0.711 | 0.848 |
-| golden set | UNREVIEWED (rule-seeded) | 200 | 0.785 | 0.695 | 0.797 |
+| golden set | UNREVIEWED (rule-seeded) | 200 | 0.780 | 0.691 | 0.791 |
 
 > **The golden row above is not yet a real measurement.** Only 0/200 rows have been human-reviewed, so the labels are still the weak-supervision rules the model was trained on, and the score is circular by construction. Run `python -m src.review_golden_set` and re-run this script. Until then, treat this table as the *test* row only.
 
@@ -19,12 +19,12 @@ and still be untrustworthy, which is the point of the other two.
 | intent | precision | recall | F1 | support |
 |---|---|---|---|---|
 | `account_login_access` | 0.75 | 0.75 | 0.75 | 12 |
-| `app_device_bug` | 0.43 | 0.75 | 0.55 | 8 |
+| `app_device_bug` | 0.43 | 0.67 | 0.52 | 9 |
 | `billing_payment` | 0.40 | 0.67 | 0.50 | 6 |
 | `cancellation_request` | 1.00 | 0.86 | 0.92 | 7 |
 | `content_availability` | 0.42 | 0.83 | 0.56 | 6 |
 | `feature_how_to` | 0.86 | 0.75 | 0.80 | 8 |
-| `general_complaint_feedback` | 0.91 | 0.82 | 0.86 | 134 |
+| `general_complaint_feedback` | 0.90 | 0.82 | 0.86 | 133 |
 | `playback_streaming_issue` | 0.83 | 0.83 | 0.83 | 6 |
 | `subscription_plan` | 0.50 | 0.46 | 0.48 | 13 |
 
@@ -33,12 +33,12 @@ and still be untrustworthy, which is the point of the other two.
 | true \ pred | account_login_ | app_device_bug | billing_paymen | cancellation_r | content_availa | feature_how_to | general_compla | playback_strea | subscription_p |
 |---|---|---|---|---|---|---|---|---|---|
 | **account_login_access** | 9 | 1 | 0 | 0 | 0 | 0 | 1 | 1 | 0 |
-| **app_device_bug** | 0 | 6 | 0 | 0 | 0 | 0 | 2 | 0 | 0 |
+| **app_device_bug** | 0 | 6 | 0 | 0 | 0 | 0 | 3 | 0 | 0 |
 | **billing_payment** | 0 | 0 | 4 | 0 | 0 | 0 | 2 | 0 | 0 |
 | **cancellation_request** | 0 | 0 | 0 | 6 | 0 | 0 | 0 | 0 | 1 |
 | **content_availability** | 0 | 0 | 0 | 0 | 5 | 0 | 0 | 0 | 1 |
 | **feature_how_to** | 0 | 0 | 0 | 0 | 0 | 6 | 1 | 0 | 1 |
-| **general_complaint_feed** | 3 | 6 | 5 | 0 | 7 | 0 | 110 | 0 | 3 |
+| **general_complaint_feed** | 3 | 6 | 5 | 0 | 7 | 0 | 109 | 0 | 3 |
 | **playback_streaming_iss** | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 5 | 0 |
 | **subscription_plan** | 0 | 1 | 1 | 0 | 0 | 1 | 4 | 0 | 6 |
 
@@ -46,11 +46,11 @@ and still be untrustworthy, which is the point of the other two.
 
 | metric | value |
 |---|---|
-| coverage (share auto-handled) | 46.0% |
-| selective accuracy on auto-handled | 85.9% |
-| error rate on auto-handled | 14.1% |
-| accuracy on escalated slice | 77.8% |
-| accuracy over everything | 81.5% |
+| coverage (share auto-handled) | 38.5% |
+| selective accuracy on auto-handled | 83.1% |
+| error rate on auto-handled | 16.9% |
+| accuracy on escalated slice | 79.7% |
+| accuracy over everything | 81.0% |
 
 The agent is *supposed* to be less accurate on the escalated slice — that is what
 abstention buys. If the two slices had equal accuracy the gate would be sorting noise.
@@ -60,8 +60,8 @@ abstention buys. If the two slices had equal accuracy the gate would be sorting 
 | difficulty | AUTO-HANDLE | ESCALATE |
 |---|---|---|
 | easy | 18 | 43 |
-| hard | 60 | 53 |
-| medium | 14 | 12 |
+| hard | 49 | 64 |
+| medium | 10 | 16 |
 
 ## Level 3 — response quality (LLM-as-judge)
 
@@ -85,11 +85,11 @@ Backend: `heuristic` · 40 replies judged
 
 ## Failure analysis — top buckets (real rows, no invented examples)
 
-37 of 200 golden messages were classified wrongly.
+38 of 200 golden messages were classified wrongly.
 
 | failure mode | n |
 |---|---|
-| missed a specific intent | 24 |
+| missed a specific intent | 25 |
 | over-triggered on vague message | 6 |
 | specific-intent confusion | 4 |
 | low-confidence confusion | 3 |

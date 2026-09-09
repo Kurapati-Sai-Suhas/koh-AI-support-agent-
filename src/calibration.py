@@ -106,7 +106,7 @@ def main():
     eqs, risks, blocked = [], [], []
     for msg, pi in zip(v_thr.customer_text.tolist(), pred):
         cases = index.search(str(msg))
-        eqs.append(validate_evidence(cases, pi)["evidence_quality"])
+        eqs.append(validate_evidence(cases, pi, str(msg))["evidence_quality"])
         r = assess_risk(str(msg), pi)
         risks.append(r["risk_level"]); blocked.append(bool(r["blocks"]))
     eqs = np.asarray(eqs); risks = np.asarray(risks); blocked = np.asarray(blocked)

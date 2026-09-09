@@ -8,10 +8,12 @@ Endpoints
   POST /predict  the full evidence-backed support decision
 """
 from __future__ import annotations
+import json
 import sys
 from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -60,6 +62,34 @@ class PredictResponse(BaseModel):
     calibrated: bool
     latency_ms: float
     trace: list[dict]
+
+
+FRONTEND = C.ROOT / "frontend" / "index.html"
+DEMO_CASES = C.ROOT / "demo_cases.json"
+
+
+@app.get("/", include_in_schema=False)
+def index():
+    """Serve the single-page frontend from the same origin as the API.
+
+    Same-origin means no CORS dance, no build step, no second server to start
+    during a demo — `uvicorn src.api:app` is the whole stack.
+    """
+    if not FRONTEND.exists():
+        return JSONResponse({"error": "frontend/index.html missing"}, status_code=404)
+    return FileResponse(FRONTEND, media_type="text/html")
+
+
+@app.get("/demo_cases")
+def demo_cases():
+    """Real messages from the held-out test split, for the frontend's demo chips.
+
+    These are inputs only. Nothing about the expected output is stored here — the
+    frontend always renders whatever the live agent returns.
+    """
+    if not DEMO_CASES.exists():
+        return {"cases": []}
+    return json.loads(DEMO_CASES.read_text(encoding="utf-8"))
 
 
 @app.get("/health")
